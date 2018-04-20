@@ -10,7 +10,7 @@ from keras.layers import BatchNormalization, Activation, ZeroPadding2D
 from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.convolutional import UpSampling2D, Conv2D
 from keras.models import Sequential, Model
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 
 # Tensorflow, Pyplot, Numpy
 import tensorflow as tf
@@ -23,28 +23,31 @@ from PIL import Image
 from glob import glob
 import os
 
+DIM_SIZE = 32
+ALPHA = 0.2
+
 class GAN():
     def __init__(self):
         # Define image specs
-        self.img_rows = 28
-        self.img_cols = 28
-        self.channels = 3
+        self.img_rows = DIM_SIZE
+        self.img_cols = DIM_SIZE
+        self.channels = 3 #RGB
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
 
-        # ???????????????
-        optimizer = Adam(0.0002, 0.5)
+        # Stochastic optimizer
+        adam = Adam(0.0002, 0.5)
+        sgd = SGD(lr=ALPHA)
 
-        # Build and compile the discriminator
-        #
-        # NOTE: Do we want Adam vs SGD or MBGD??????
+        # Build/compile DISCRIMINATOR
         self.discriminator = self.build_discriminator()
         self.discriminator.compile(loss='binary_crossentropy',
-            optimizer=optimizer,
+            optimizer=sgd,
             metrics=['accuracy'])
 
-        # Build and compile the generator
+        # Build/compile GENERATOR
         self.generator = self.build_generator()
-        self.generator.compile(loss='binary_crossentropy', optimizer=optimizer)
+        self.generator.compile(loss='binary_crossentropy',
+            optimizer=adam)
 
         # The generator takes noise as input and generated imgs
         # input white noise image vector of size 100x1
@@ -54,36 +57,37 @@ class GAN():
         # For the combined model we will only train the generator
         self.discriminator.trainable = False
 
-        # The valid takes generated images as input and determines validity
-        # Discriminator decides whether or not generated image passes
+        # The discriminator takes generated images as input and determines validity
         valid = self.discriminator(img)
 
-        # The combined model  (stacked generator and discriminator) takes
-        # noise as input => generates images => determines validity
+        # The combined model (stacked generator and discriminator)
+        # Input noise => generated images => determines validity
         self.combined = Model(z, valid)
-        self.combined.compile(loss='binary_crossentropy', optimizer=optimizer)
+        self.combined.compile(loss='binary_crossentropy',
+            optimizer=adam)
 
     def build_generator(self):
 
         noise_shape = (100,)
 
-        #declare Keras "Sequential" type of model, this is what most deep learning uses
+        #Keras "Sequential" model for deep learning
         model = Sequential()
 
         model.add(Dense(256, input_shape=noise_shape))
-        model.add(LeakyReLU(alpha=0.2))
+        model.add(LeakyReLU(alpha=ALPHA))
         model.add(BatchNormalization(momentum=0.8))
 
         model.add(Dense(512))
-        model.add(LeakyReLU(alpha=0.2))
+        model.add(LeakyReLU(alpha=ALPHA))
         model.add(BatchNormalization(momentum=0.8))
 
         model.add(Dense(1024))
-        model.add(LeakyReLU(alpha=0.2))
+        model.add(LeakyReLU(alpha=ALPHA))
         model.add(BatchNormalization(momentum=0.8))
 
         model.add(Dense(np.prod(self.img_shape), activation='tanh'))
         model.add(Reshape(self.img_shape))
+        model.summary()
 
         noise = Input(shape=noise_shape)
         img = model(noise)
@@ -95,13 +99,16 @@ class GAN():
         img_shape = (self.img_rows, self.img_cols, self.channels)
 
         model = Sequential()
-
         model.add(Flatten(input_shape=img_shape))
+
         model.add(Dense(512))
-        model.add(LeakyReLU(alpha=0.2))
+        model.add(LeakyReLU(alpha=ALPHA))
+
         model.add(Dense(256))
-        model.add(LeakyReLU(alpha=0.2))
+        model.add(LeakyReLU(alpha=ALPHA))
+
         model.add(Dense(1, activation='sigmoid'))
+        model.summary()
 
         img = Input(shape=img_shape)
         validity = model(img)
@@ -125,7 +132,7 @@ class GAN():
     def train(self, epochs, batch_size=128, save_interval=50):
 
         data_dir = './data'
-        X_train = self.get_batch(glob(os.path.join(data_dir, '*.jpg'))[:5000], 28, 28, 'RGB')
+        X_train = self.get_batch(glob(os.path.join(data_dir, '*.jpg')), DIM_SIZE, DIM_SIZE, 'RGB')
 
 
         #Rescale -1 to 1
@@ -212,4 +219,4 @@ class GAN():
 
 if __name__ == '__main__':
     gan = GAN()
-    gan.train(epochs=30000, batch_size=32, save_interval=200)
+    gan.train(epochs=30000, batch_size=32, save_interval=100)
