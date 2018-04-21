@@ -1,3 +1,9 @@
 TEST_GAN/data
 TEST_GAN/output
 *.DS_Store
+TEST_GAN/bin
+TEST_GAN/include
+TEST_GAN/lib
+TEST_GAN/local
+TEST_GAN/share
+TEST_GAN/pip-selfcheck.json
