@@ -43,7 +43,7 @@ class GAN():
         # Build/compile DISCRIMINATOR
         self.discriminator = self.build_discriminator()
         self.discriminator.compile(loss='binary_crossentropy',
-            optimizer=sgd,
+            optimizer=adam,
             metrics=['accuracy'])
 
         # Build/compile GENERATOR
