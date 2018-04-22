@@ -7,3 +7,4 @@ TEST_GAN/lib
 TEST_GAN/local
 TEST_GAN/share
 TEST_GAN/pip-selfcheck.json
+get_remote_output.sh
