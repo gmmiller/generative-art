@@ -1,5 +1,22 @@
 """
 This code adds the ability to RGB images using the gan architecture
+
+Important design decisions we have made for GAN:
+1) Normalized inputs (-1,1)
+2) Random sample from Guassian/Normal distribution (not uniform)
+3) Separate batches of real and fake images
+4) Avoid "sparse gradients" by using LeakyReLU/Avg Sampling (not ReLU/Max)
+5) Adam optimizer
+
+Things we have not tried:
+1) Modified loss function
+2) Soft/Noisy Labeling
+3) Downsampling of any kind
+4) DCGAN/Hybrid model
+
+CURRENT NOTES:
+- Loss for G/D does not steadily decrease
+- Accuracy wavers from 70-100%
 """
 
 # Keras Machine Learning tools
@@ -12,12 +29,14 @@ from keras.layers.convolutional import UpSampling2D, Conv2D
 from keras.models import Sequential, Model
 from keras.optimizers import Adam, SGD
 
-# Tensorflow, Pyplot, Numpy
+# Tensorflow and Numpy
 import tensorflow as tf
+import numpy as np
+
+# Special import of matplotlib/pyplot for Gattaca machine
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import numpy as np
 
 # Pillow for image manipulation
 from PIL import Image
@@ -118,6 +137,7 @@ class GAN():
         return Model(img, validity)
 
     def get_image(self, image_path, width, height, mode):
+        # Resizes image and returns in Numpy array form
 
         image = Image.open(image_path)
         if image.size != (width, height):
@@ -126,6 +146,9 @@ class GAN():
         return np.array(image.convert(mode))
 
     def get_batch(self, image_files, width, height, mode):
+        # Creates massive Numpy array containing array for each image in dataset
+        print("Resizing dataset...")
+
         data_batch = np.array(
             [self.get_image(sample_file, width, height, mode) for sample_file in image_files])
 
@@ -137,7 +160,7 @@ class GAN():
         X_train = self.get_batch(glob(os.path.join(data_dir, '*.jpg')), DIM_SIZE, DIM_SIZE, 'RGB')
 
 
-        #Rescale -1 to 1
+        #Rescale between -1 and 1 (normalize inputs)
         X_train = (X_train.astype(np.float32) - 127.5) / 127.5
 
 
@@ -164,8 +187,12 @@ class GAN():
             gen_imgs = self.generator.predict(noise)
 
             # Train the discriminator
-            d_loss_real = self.discriminator.train_on_batch(imgs, np.ones((half_batch, 1)))
-            d_loss_fake = self.discriminator.train_on_batch(gen_imgs, np.zeros((half_batch, 1)))
+            if epoch%100 == 0:
+                d_loss_real = self.discriminator.train_on_batch(imgs, np.zeros((half_batch, 1)))
+                d_loss_fake = self.discriminator.train_on_batch(gen_imgs, np.ones((half_batch, 1)))
+            else:
+                d_loss_real = self.discriminator.train_on_batch(imgs, np.ones((half_batch, 1)))
+                d_loss_fake = self.discriminator.train_on_batch(gen_imgs, np.zeros((half_batch, 1)))
             d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
 
@@ -221,4 +248,4 @@ class GAN():
 
 if __name__ == '__main__':
     gan = GAN()
-    gan.train(epochs=30000, batch_size=32, save_interval=100)
+    gan.train(epochs=30000, batch_size=32, save_interval=1000)
