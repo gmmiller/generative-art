@@ -136,6 +136,7 @@ def run_inference_on_image(image):
   Returns:
     Nothing
   """
+  scores = []
   if not tf.gfile.Exists(image):
     tf.logging.fatal('File does not exist %s', image)
   image_data = tf.gfile.FastGFile(image, 'rb').read()
@@ -164,7 +165,9 @@ def run_inference_on_image(image):
     for node_id in top_k:
       human_string = node_lookup.id_to_string(node_id)
       score = predictions[node_id]
+      scores.append(score)
       print('%s (score = %.5f)' % (human_string, score))
+    return max(scores)
 
 
 def maybe_download_and_extract():
@@ -190,7 +193,9 @@ def main(_):
   maybe_download_and_extract()
   image = (FLAGS.image_file if FLAGS.image_file else
            os.path.join(FLAGS.model_dir, 'cropped_panda.jpg'))
-  run_inference_on_image(image)
+  max = run_inference_on_image(image)
+  return max > .5
+
 
 
 if __name__ == '__main__':

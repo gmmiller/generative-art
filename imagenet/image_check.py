@@ -1,8 +1,7 @@
 import classify_image
 
 def main():
-	pass
-
+	check = classify_image.main()
 
 if __name__ == '__main__':
 	main()

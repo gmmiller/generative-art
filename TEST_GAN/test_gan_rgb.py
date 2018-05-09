@@ -32,6 +32,7 @@ from keras.optimizers import Adam, SGD
 # Tensorflow and Numpy
 import tensorflow as tf
 import numpy as np
+from random import randint
 
 # Special import of matplotlib/pyplot for Gattaca machine
 import matplotlib
@@ -141,6 +142,11 @@ class GAN():
 
         image = Image.open(image_path)
         if image.size != (width, height):
+            new_w = image.size[0] - 50
+            new_h = image.size[1] - 50
+            j = (image.size[0] - new_w) // 2
+            i = (image.size[1] - new_h) // 2
+            image = image.crop([j,i,j+new_w, i + new_h])
             image = image.resize([width, height])
 
         return np.array(image.convert(mode))
@@ -187,7 +193,8 @@ class GAN():
             gen_imgs = self.generator.predict(noise)
 
             # Train the discriminator
-            if epoch%100 == 0:
+            rand = randint(1,100)
+            if rand < 5:
                 d_loss_real = self.discriminator.train_on_batch(imgs, np.zeros((half_batch, 1)))
                 d_loss_fake = self.discriminator.train_on_batch(gen_imgs, np.ones((half_batch, 1)))
             else:
