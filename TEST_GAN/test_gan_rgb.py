@@ -45,7 +45,7 @@ from PIL import Image
 from glob import glob
 import os
 
-DIM_SIZE = 32
+DIM_SIZE = 64
 ALPHA = 0.2
 
 class GAN():
@@ -235,7 +235,7 @@ class GAN():
             g_loss_logs_a = np.array(g_loss_logs)
 
     def save_imgs(self, epoch):
-        r, c = 5, 5
+        r, c = 2, 2
         noise = np.random.normal(0, 1, (r * c, 100))
         gen_imgs = self.generator.predict(noise)
 
