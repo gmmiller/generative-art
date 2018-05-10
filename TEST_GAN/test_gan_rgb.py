@@ -14,9 +14,6 @@ Things we have not tried:
 3) Downsampling of any kind
 4) DCGAN/Hybrid model
 
-CURRENT NOTES:
-- Loss for G/D does not steadily decrease
-- Accuracy wavers from 70-100%
 """
 
 # Keras Machine Learning tools
@@ -45,8 +42,8 @@ from PIL import Image
 from glob import glob
 import os
 
-DIM_SIZE = 64
-ALPHA = 0.2
+DIM_SIZE = 32
+ALPHA = 0.5
 
 class GAN():
     def __init__(self):
@@ -178,7 +175,6 @@ class GAN():
         g_loss_logs = []
 
         for epoch in range(epochs):
-
             # ---------------------
             #  Train Discriminator
             # ---------------------
@@ -235,7 +231,7 @@ class GAN():
             g_loss_logs_a = np.array(g_loss_logs)
 
     def save_imgs(self, epoch):
-        r, c = 2, 2
+        r, c = 4, 4
         noise = np.random.normal(0, 1, (r * c, 100))
         gen_imgs = self.generator.predict(noise)
 
@@ -255,4 +251,4 @@ class GAN():
 
 if __name__ == '__main__':
     gan = GAN()
-    gan.train(epochs=50000, batch_size=32, save_interval=200)
+    gan.train(epochs=50000, batch_size=64, save_interval=200)
