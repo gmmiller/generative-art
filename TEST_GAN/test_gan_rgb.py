@@ -255,4 +255,4 @@ class GAN():
 
 if __name__ == '__main__':
     gan = GAN()
-    gan.train(epochs=30000, batch_size=32, save_interval=1000)
+    gan.train(epochs=50000, batch_size=32, save_interval=200)
