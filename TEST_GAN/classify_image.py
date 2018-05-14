@@ -186,7 +186,7 @@ def main():
     if max > .5:
       counter+=1
     print(index)
-  print(counter)
+  print("VALID COUNT (.5): " + str(counter))
 
 
 

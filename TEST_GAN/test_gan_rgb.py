@@ -10,7 +10,6 @@ Important design decisions we have made for GAN:
 
 Things we have not tried:
 1) Modified loss function
-2) Soft/Noisy Labeling
 3) Downsampling of any kind
 4) DCGAN/Hybrid model
 
@@ -44,6 +43,7 @@ import os
 
 DIM_SIZE = 32
 ALPHA = 0.5
+PERCENT_FLIP = 4
 
 class GAN():
     def __init__(self):
@@ -55,9 +55,8 @@ class GAN():
 
         # Stochastic optimizer
         adam = Adam(0.0002, 0.5)
-        sgd = SGD(lr=ALPHA)
 
-        # Build/compile DISCRIMINATOR
+        # Build and compile DISCRIMINATOR
         self.discriminator = self.build_discriminator()
         self.discriminator.compile(loss='binary_crossentropy',
             optimizer=adam,
@@ -68,8 +67,7 @@ class GAN():
         self.generator.compile(loss='binary_crossentropy',
             optimizer=adam)
 
-        # The generator takes noise as input and generated imgs
-        # input white noise image vector of size 100x1
+        # The generator takes noise as input of size 100x1, returns img
         z = Input(shape=(100,))
         img = self.generator(z)
 
@@ -189,8 +187,8 @@ class GAN():
             gen_imgs = self.generator.predict(noise)
 
             # Train the discriminator
-            rand = randint(1,100)
-            if rand < 5:
+            rand = randint(0,100)
+            if rand < PERCENT_FLIP:
                 d_loss_real = self.discriminator.train_on_batch(imgs, np.zeros((half_batch, 1)))
                 d_loss_fake = self.discriminator.train_on_batch(gen_imgs, np.ones((half_batch, 1)))
             else:
@@ -224,11 +222,6 @@ class GAN():
             if epoch % save_interval == 0:
                 self.save_imgs(epoch)
 
-
-            #Convert the log lists to numpy arrays
-            d_loss_logs_r_a = np.array(d_loss_logs_r)
-            d_loss_logs_f_a = np.array(d_loss_logs_f)
-            g_loss_logs_a = np.array(g_loss_logs)
 
     def save_imgs(self, epoch):
         r, c = 4, 4
