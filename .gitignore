@@ -1,5 +1,7 @@
 TEST_GAN/data
 TEST_GAN/output
+test_gans/data
+test_gans/output
 *.DS_Store
 TEST_GAN/bin
 TEST_GAN/include
